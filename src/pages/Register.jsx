@@ -1,18 +1,22 @@
 import React from "react";
 import { User, Lock } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
 const Register = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-blue-100">
       <div className="bg-[#F4FCF9] p-12 rounded-2xl shadow-2xl w-[450px]">
+        
         <div className="flex flex-col items-center">
+          <NavLink to="/">
           <img
             src="/pic/gogo.png" 
             alt="BookTrees Logo"
             className=" h-64 mb-6"
           />
           <h1 className="text-xl font-semibold text-gray-700">BookTrees</h1>
-        </div>
+          </NavLink>        
+          </div>
         <div className="mt-8">
           <div className="mb-6">
             <label className="block text-gray-600 mb-2 text-lg">ชื่อผู้ใช้งาน</label>

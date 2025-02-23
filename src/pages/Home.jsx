@@ -9,6 +9,7 @@ import Slideshow from "../components/Slideshow";
 const BookList = () => {
   const [books, setBooks] = useState([]);
   const [bookCategories, setBookCategories] = useState([]);
+  const [topBooks, setTopBooks] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentIndex2, setCurrentIndex2] = useState(0);
 
@@ -19,6 +20,13 @@ const BookList = () => {
       })
       .catch((e) => console.log(e));
 
+
+      BookService.getTopBooks(10)
+      .then((response) => {
+        setTopBooks(response.data);
+      })
+      .catch((e) => console.log(e));
+      
     BookCategoryService.getBooksCategory()
       .then((response) => {
         setBookCategories(response.data);
@@ -77,11 +85,11 @@ const BookList = () => {
           </button>
         </div>
 
-        {/* หนังสือยอดนิยม ตลอดกาล */}
-        <div className="relative overflow-hidden w-full px-4 mt-10">
+       {/* หนังสือยอดนิยม ตลอดกาล */}
+       <div className="relative overflow-hidden w-full px-4 mt-10">
           <h1 className="text-3xl font-bold ml-5 mb-4">🔥 หนังสือยอดนิยม ตลอดกาล</h1>
           <div className="flex transition-transform duration-500" style={{ transform: `translateX(-${(currentIndex2 * 100) / 5}%)` }}>
-            {books.map((book) => (
+            {topBooks.map((book) => (
               <div key={book._id} className="w-1/5 flex-none p-2">
                 <Link to={`/content/${book._id}`}>
                   <div className="bg-white p-4 rounded-lg shadow-lg">
@@ -93,7 +101,7 @@ const BookList = () => {
               </div>
             ))}
           </div>
-          <button onClick={nextSlide2} className="absolute right-2 top-1/2 transform -translate-y-1/2  p-2 rounded-full ">
+          <button onClick={nextSlide2} className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full">
             <ChevronRight size={36} />
           </button>
         </div>
@@ -107,22 +115,22 @@ const BookList = () => {
   <div className="grid grid-cols-3 gap-6">
     {/* หนังสือยอดนิยม */}
     <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col min-h-[450px]">
-      <h2 className="text-xl font-bold text-center mb-4 text-gray-700">📖 หนังสือยอดนิยม</h2>
-      <div className="space-y-4 flex-grow">
-        {books.slice(0, 5).map((book, index) => (
-          <Link to={`/content/${book._id}`} key={book._id}>
-            <div className="flex items-center space-x-4 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
-              <span className="text-lg font-semibold text-gray-700">#{index + 1}</span>
-              <img src={book.book_photo} alt={book.title} className="w-14 h-20 object-cover rounded-md shadow-md" />
-              <div>
-                <h3 className="text-md font-semibold text-gray-800">{book.title}</h3>
-                <p className="text-gray-600 text-sm">{book.author}</p>
-              </div>
+            <h2 className="text-xl font-bold text-center mb-4 text-gray-700">📖 หนังสือยอดนิยม</h2>
+            <div className="space-y-4 flex-grow">
+              {topBooks.slice(0, 5).map((book, index) => (
+                <Link to={`/content/${book._id}`} key={book._id}>
+                  <div className="flex items-center space-x-4 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                    <span className="text-lg font-semibold text-gray-700">#{index + 1}</span>
+                    <img src={book.book_photo} alt={book.title} className="w-14 h-20 object-cover rounded-md shadow-md" />
+                    <div>
+                      <h3 className="text-md font-semibold text-gray-800">{book.title}</h3>
+                      <p className="text-gray-600 text-sm">{book.author}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
-          </Link>
-        ))}
-      </div>
-    </div>
+          </div>
 
     {/* นักอ่านที่อ่านเยอะที่สุด */}
     <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col min-h-[450px]">
