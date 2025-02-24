@@ -1,16 +1,25 @@
 // Navbar.jsx
 import React, { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Search, User, SquareLibrary, BookType, Info } from "lucide-react";
+import {jwtDecode} from "jwt-decode";
 import BookService from "../Services/Book.service";
+import UserService from "../Services/User.service";
+
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [books, setBooks] = useState([]);
+  const [user, setUser] = useState(null);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const navigate = useNavigate();
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
+  };
+  const toggleProfileDropdown = () => {
+    setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
   const categories = [
@@ -43,6 +52,28 @@ const Navbar = () => {
     );
     setFilteredBooks(results);
   }, [searchTerm, books]);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decoded = jwtDecode(token);
+      fetchUserData(decoded.userId);
+    }
+  }, []);
+
+  const fetchUserData = async (userId) => {
+    try {
+      const response = await UserService.getUser(userId);
+      setUser(response.data);
+    } catch (error) {
+      console.error("Error fetching user data", error);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    navigate("/login");
+  };
 
   return (
     <nav className="bg-[#F4FCF9] p-2 shadow-md">
@@ -65,20 +96,20 @@ const Navbar = () => {
 
           {/* Navigation Links */}
           <div className="flex space-x-6 relative items-center">
-            <div className="relative">
+            <div className="relative ">
               <button
                 onClick={toggleDropdown}
-                className="text-gray-500 hover:text-black flex items-center text-2xl font-semibold"
+                className="text-gray-500 hover:text-black items-center text-2xl font-semibold transition-all duration-500"
               >
                 <BookType size={26} className="inline-block mr-1" /> หมวดหมู่
               </button>
               {isDropdownOpen && (
-                <div className="absolute left-0 mt-2 bg-white rounded-md shadow-lg z-10 py-2 border border-gray-200">
-                  <ul className="flex space-x-4 text-gray-700 px-4">
+                <div className="absolute left-0 mt-2 bg-white rounded-md shadow-lg z-10 py-2 border border-gray-200 ">
+                  <ul className="grid grid-cols-1 gap-1 text-gray-700 w-40">
                     {categories.map((category) => (
                       <li
                         key={category.category_id}
-                        className="menu py-2 hover:bg-gray-100 cursor-pointer"
+                        className="menu py-2 items-center justify-center flex w-40  hover:text-white hover:bg-slate-300 cursor-pointer text-xs transition-all duration-500 "
                       >
                         {category.name}
                       </li>
@@ -151,18 +182,50 @@ const Navbar = () => {
 
           {/* User Info */}
           <div className="relative items-center flex">
-            <NavLink
-              to="/register"
-              className={({ isActive }) =>
-                isActive
-                  ? "text-black font-bold"
-                  : "text-gray-700 hover:text-black"
-              }
-            >
-              <button className="text-gray-500 hover:text-black flex items-center text-2xl font-semibold transition-all duration-500">
-                <User size={26} className="mr-1" /> เข้าสู่ระบบ
-              </button>
-            </NavLink>
+            {user ? (
+              <>
+                <img
+                  src={user.pictureUrl}
+                  alt="Profile"
+                  className="h-10 w-10 rounded-full mr-2 cursor-pointer"
+                  onClick={toggleProfileDropdown}
+                />
+                {isProfileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 bg-white rounded-md shadow-lg z-10 py-2 border border-gray-200">
+                    <ul className="text-gray-700">
+                      <li
+                        className="py-2 px-4 hover:bg-gray-100 cursor-pointer flex items-center"
+                        onClick={() => {
+                          setIsProfileDropdownOpen(false);
+                          navigate('/readings');
+                        }}
+                      >
+                        <SquareLibrary size={20} className="inline-block mr-2" /> คลังหนังสือ
+                      </li>
+                      <li
+                        className="py-2 px-4 hover:bg-gray-100 cursor-pointer flex items-center"
+                        onClick={handleLogout}
+                      >
+                        ออกจากระบบ
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <NavLink
+                to="/login"
+                className={({ isActive }) =>
+                  isActive
+                    ? "text-black font-bold"
+                    : "text-gray-700 hover:text-black"
+                }
+              >
+                <button className="text-gray-500 hover:text-black flex items-center text-2xl font-semibold transition-all duration-500">
+                  <User size={26} className="mr-1" /> เข้าสู่ระบบ
+                </button>
+              </NavLink>
+            )}
           </div>
         </div>
       </div>

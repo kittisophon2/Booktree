@@ -7,6 +7,8 @@ import { Books } from './pages/Books'
 import About from './pages/About'
 import Register from './pages/Register'
 import Content from './pages/Content'
+import Login from './pages/Login'
+
 
 const App = () => {
   return (
@@ -18,7 +20,8 @@ const App = () => {
         <Route path="/readings" element={<Treasury />} />
         <Route path="/about" element={<About />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/content/:book_id" element={<Content />} /> {/* แก้ไขตรงนี้ */}
+        <Route path="/content/:book_id" element={<Content />} />
+        <Route path="/login" element={<Login/>} />
       </Routes>
     </BrowserRouter>
   )

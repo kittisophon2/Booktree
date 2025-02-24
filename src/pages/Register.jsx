@@ -1,48 +1,141 @@
-import React from "react";
-import { User, Lock } from "lucide-react";
+import React, { useState } from "react";
+import { User, Lock, Mail, Image as ImageIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import UserService from "../Services/User.service";
 
 const Register = () => {
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    picture: null,
+  });
+
+  const [message, setMessage] = useState("");
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "picture") {
+      setFormData({ ...formData, picture: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const form = new FormData();
+    form.append("username", formData.username);
+    form.append("email", formData.email);
+    form.append("password", formData.password);
+    form.append("profilePicture", formData.picture);
+
+    try {
+      await UserService.postUser(form);
+      setMessage("🎉 สมัครสมาชิกสำเร็จ!");
+    } catch (error) {
+      setMessage(`❌ เกิดข้อผิดพลาด: ${error.response.data.error}`);
+    }
+  };
+
   return (
-    <div className="flex justify-center items-center min-h-screen bg-blue-100">
-      <div className="bg-[#F4FCF9] p-12 rounded-2xl shadow-2xl w-[450px]">
-        
-        <div className="flex flex-col items-center">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-blue-100 to-green-100">
+      <div className="bg-white p-10 rounded-3xl shadow-lg w-[400px]">
+        {/* Logo Section */}
+        <div className="flex flex-col items-center mb-8">
           <NavLink to="/">
-          <img
-            src="/pic/gogo.png" 
-            alt="BookTrees Logo"
-            className=" h-64 mb-6"
-          />
-          <h1 className="text-xl text-center font-semibold text-gray-700">BookTrees</h1>
-          </NavLink>        
-          </div>
-        <div className="mt-8">
-          <div className="mb-6">
-            <label className="block text-gray-600 mb-2 text-lg">ชื่อผู้ใช้งาน</label>
-            <div className="flex items-center border rounded-lg px-4 py-3 text-lg">
-              <User className="text-gray-400 " size={24} />
+            <img
+              src="/pic/gogo.png"
+              alt="BookTrees Logo"
+              className="h-32 mb-4"
+            />
+            <h1 className="text-2xl font-bold text-gray-700">BookTrees</h1>
+          </NavLink>
+        </div>
+
+        {/* Register Form */}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-5">
+            <label className="block text-gray-600 mb-2">ชื่อผู้ใช้งาน</label>
+            <div className="flex items-center border rounded-lg px-4 py-2">
+              <User className="text-gray-400" size={20} />
               <input
                 type="text"
+                name="username"
                 placeholder="ชื่อผู้ใช้งาน"
-                className="w-full pl-3 outline-none text-lg"
+                className="w-full pl-3 outline-none"
+                onChange={handleChange}
               />
             </div>
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-600 mb-2 text-lg">รหัสผ่าน</label>
-            <div className="flex items-center border rounded-lg px-4 py-3 text-lg">
-              <Lock className="text-gray-400" size={24} />
+
+          <div className="mb-5">
+            <label className="block text-gray-600 mb-2">อีเมล</label>
+            <div className="flex items-center border rounded-lg px-4 py-2">
+              <Mail className="text-gray-400" size={20} />
+              <input
+                type="email"
+                name="email"
+                placeholder="example@email.com"
+                className="w-full pl-3 outline-none"
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="mb-5">
+            <label className="block text-gray-600 mb-2">รหัสผ่าน</label>
+            <div className="flex items-center border rounded-lg px-4 py-2">
+              <Lock className="text-gray-400" size={20} />
               <input
                 type="password"
+                name="password"
                 placeholder="รหัสผ่าน"
-                className="w-full pl-3 outline-none text-lg"
+                className="w-full pl-3 outline-none"
+                onChange={handleChange}
               />
             </div>
           </div>
-          <button className="w-full bg-[#304896] text-white py-3 rounded-[50px] text-4xl font-semibold hover:bg-blue-800">
-            ล็อกอิน
+
+          <div className="mb-5">
+            <label className="block text-gray-600 mb-2">อัปโหลดรูปภาพ</label>
+            <div className="flex items-center border rounded-lg px-4 py-2">
+              <ImageIcon className="text-gray-400" size={20} />
+              <input
+                type="file"
+                name="picture"
+                accept="image/*"
+                className="w-full pl-3 outline-none"
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-[#304896] text-white py-3 rounded-full text-lg font-semibold hover:bg-blue-800 transition duration-200"
+          >
+            สมัครสมาชิก
           </button>
+
+          {message && (
+            <p className="mt-4 text-center text-lg font-medium text-green-600">
+              {message}
+            </p>
+          )}
+        </form>
+
+        {/* Login Link */}
+        <div className="mt-6 text-center">
+          <p className="text-gray-600">
+            มีบัญชีแล้ว?{" "}
+            <NavLink
+              to="/login"
+              className="text-blue-600 font-semibold hover:underline"
+            >
+              เข้าสู่ระบบ
+            </NavLink>
+          </p>
         </div>
       </div>
     </div>
