@@ -14,7 +14,7 @@ const Register = () => {
             alt="BookTrees Logo"
             className=" h-64 mb-6"
           />
-          <h1 className="text-xl font-semibold text-gray-700">BookTrees</h1>
+          <h1 className="text-xl text-center font-semibold text-gray-700">BookTrees</h1>
           </NavLink>        
           </div>
         <div className="mt-8">
