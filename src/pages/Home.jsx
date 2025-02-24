@@ -110,7 +110,7 @@ const BookList = () => {
 
 {/* จัดอันดับหนังสือ/นักอ่าน */}
 <div className="w-full px-4 mt-10 pb-20">
-  <h1 className="text-3xl font-bold ml-5 mb-6 text-gray-800 ">🏆 จัดอันดับหนังสือ/นักอ่าน</h1>
+  <h1 className="text-3xl font-bold ml-10 mb-6 text-gray-800 ">🏆 จัดอันดับหนังสือ/นักอ่าน</h1>
 
   <div className="grid grid-cols-3 gap-6">
     {/* หนังสือยอดนิยม */}
