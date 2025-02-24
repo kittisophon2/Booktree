@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Search, User, SquareLibrary, BookType, Info } from "lucide-react";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import BookService from "../Services/Book.service";
 import UserService from "../Services/User.service";
-
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -96,28 +95,34 @@ const Navbar = () => {
 
           {/* Navigation Links */}
           <div className="flex space-x-6 relative items-center">
-            <div className="relative ">
+          <div className="relative">
               <button
-                onClick={toggleDropdown}
-                className="text-gray-500 hover:text-black items-center text-2xl font-semibold transition-all duration-500"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="text-gray-500 hover:text-black items-center text-2xl font-semibold transition-all duration-500 flex"
               >
                 <BookType size={26} className="inline-block mr-1" /> หมวดหมู่
               </button>
               {isDropdownOpen && (
-                <div className="absolute left-0 mt-2 bg-white rounded-md shadow-lg z-10 py-2 border border-gray-200 ">
-                  <ul className="grid grid-cols-1 gap-1 text-gray-700 w-40">
+                <div className="absolute left-0 mt-2 bg-white rounded-md shadow-lg z-10 py-2 border border-gray-200 w-48">
+                  <ul className="grid grid-cols-1 gap-1 text-gray-700">
                     {categories.map((category) => (
-                      <li
-                        key={category.category_id}
-                        className="menu py-2 items-center justify-center flex w-40  hover:text-white hover:bg-slate-300 cursor-pointer text-xs transition-all duration-500 "
-                      >
-                        {category.name}
+                      <li key={category.category_id}>
+                        <NavLink
+                          to={`/bookcategories/category/${category.category_id}`} // ✅ ใช้ category_id จาก API
+                          className="block py-2 px-4 hover:text-white hover:bg-slate-500 cursor-pointer text-sm transition-all duration-300 rounded-md"
+                          onClick={() => setIsDropdownOpen(false)} // ✅ ปิด dropdown หลังจากคลิก
+                        >
+                          {category.name}
+                        </NavLink>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
             </div>
+
+
+
             <NavLink
               to="/readings"
               className={({ isActive }) =>
@@ -187,46 +192,49 @@ const Navbar = () => {
                 <img
                   src={user.pictureUrl}
                   alt="Profile"
-                  className="h-10 w-10 rounded-full mr-2 cursor-pointer"
+                  className="h-10 w-10 rounded-full mr-2 cursor-pointer border-2 border-gray-300 hover:border-gray-500 transition-all"
                   onClick={toggleProfileDropdown}
                 />
                 {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 bg-white rounded-md shadow-lg z-10 py-2 border border-gray-200">
+                  <div className="absolute right-0 top-full mt-2 bg-white/90 backdrop-blur-md rounded-xl shadow-xl w-72 py-4 border border-gray-200 z-20">
+                    {/* User Info Section */}
+                    <div className="flex items-center px-4 pb-3 border-b">
+                      <img
+                        src={user.pictureUrl}
+                        alt="Profile"
+                        className="h-12 w-12 rounded-full mr-3 border border-gray-300"
+                      />
+                      <div className="overflow-hidden">
+                        <h3 className="font-semibold text-gray-900 max-w-[200px] truncate">
+                          {user.username || "ผู้ใช้ไม่มีชื่อ"}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {user.email || "ไม่ระบุอีเมล"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Menu Options */}
                     <ul className="text-gray-700">
                       <li
-                        className="py-2 px-4 hover:bg-gray-100 cursor-pointer flex items-center"
-                        onClick={() => {
-                          setIsProfileDropdownOpen(false);
-                          navigate('/readings');
-                        }}
-                      >
-                        <SquareLibrary size={20} className="inline-block mr-2" /> คลังหนังสือ
-                      </li>
-                      <li
-                        className="py-2 px-4 hover:bg-gray-100 cursor-pointer flex items-center"
+                        className="py-3 px-5 hover:bg-gray-50 cursor-pointer flex items-center text-red-500 font-semibold rounded-md transition"
                         onClick={handleLogout}
                       >
-                        ออกจากระบบ
+                         ออกจากระบบ
                       </li>
                     </ul>
                   </div>
                 )}
               </>
             ) : (
-              <NavLink
-                to="/login"
-                className={({ isActive }) =>
-                  isActive
-                    ? "text-black font-bold"
-                    : "text-gray-700 hover:text-black"
-                }
-              >
-                <button className="text-gray-500 hover:text-black flex items-center text-2xl font-semibold transition-all duration-500">
-                  <User size={26} className="mr-1" /> เข้าสู่ระบบ
+              <NavLink to="/login">
+                <button className="text-gray-500 hover:text-black flex items-center text-lg font-semibold transition-all duration-500">
+                  <User size={24} className="mr-1" /> เข้าสู่ระบบ
                 </button>
               </NavLink>
             )}
           </div>
+
         </div>
       </div>
     </nav>

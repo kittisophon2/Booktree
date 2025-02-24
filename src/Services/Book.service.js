@@ -8,9 +8,14 @@ const getTopBooks = () => {
   return http.get(`/books/top-books/top`);
 };
 
+const getBookById = (book_id) => {
+  return http.get(`/books/${book_id}`);
+};
+
 const BookService = {
   getBooks,
-  getTopBooks
+  getTopBooks,
+  getBookById
 };
 
 export default BookService;

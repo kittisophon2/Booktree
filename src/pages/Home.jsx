@@ -14,30 +14,53 @@ const BookList = () => {
   const [currentIndex2, setCurrentIndex2] = useState(0);
 
   useEffect(() => {
+    // โหลดหนังสือทั้งหมด
     BookService.getBooks()
       .then((response) => {
         setBooks(response.data);
       })
       .catch((e) => console.log(e));
-
+  
+    // โหลดหนังสือยอดนิยม
     BookService.getTopBooks(10)
       .then((response) => {
         setTopBooks(response.data);
       })
       .catch((e) => console.log(e));
-
-    BookCategoryService.getBooksCategory()
-      .then((response) => {
-        setBookCategories(response.data);
-      })
-      .catch((e) => console.log(e));
   }, []);
-
-  // ฟังก์ชันดึง categoryName ตาม book_id
+  
+  useEffect(() => {
+    if (books.length === 0) return;
+  
+    const categoryRequests = books.map((book) =>
+      BookCategoryService.getCategoriesByBookId(book._id)
+    );
+  
+    Promise.all(categoryRequests)
+      .then((categoryResponses) => {
+        const categories = categoryResponses.map((res, index) => ({
+          book_id: books[index]._id,
+          category: res.data.categories.length > 0 ? res.data.categories : ["ไม่ระบุหมวดหมู่"],
+        }));
+        setBookCategories(categories);
+      })
+      .catch((e) => console.log("Error loading categories:", e));
+  }, [books]);
+  
+    
   const getCategoryName = (bookId) => {
     const bookCategory = bookCategories.find((bc) => bc.book_id === bookId);
-    return bookCategory ? bookCategory.category.name : "ไม่ระบุหมวดหมู่";
+    
+    if (!bookCategory || !bookCategory.category) return "ไม่ระบุหมวดหมู่";
+  
+    // ถ้า category เป็น array ให้แสดงผลเป็นข้อความ เช่น "Fantasy, Adventure"
+    return Array.isArray(bookCategory.category)
+      ? bookCategory.category.join(", ")
+      : bookCategory.category;
   };
+  
+  
+ 
 
   const prevSlide = () => {
     setCurrentIndex((prevIndex) => Math.max(prevIndex - 5, 0));
@@ -231,10 +254,10 @@ const BookList = () => {
             </div>
           </div>
 
-          {/* นักอ่านที่อ่านไวที่สุด */}
+          {/* หนังสือที่ได้คะแนนมากที่สุด */}
           <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col min-h-[450px]">
             <h2 className="text-xl font-bold text-center mb-4 text-gray-700">
-              ⭐ นักอ่านที่อ่านไวที่สุด
+              ⭐ หนังสือที่ได้คะแนนมากที่สุด
             </h2>
             <div className=" flex-grow">
               {[...Array(5)].map((_, index) => (
@@ -260,6 +283,7 @@ const BookList = () => {
               ))}
             </div>
           </div>
+
         </div>
       </div>
     </Layout>

@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Registers from './pages/Register'
 import Treasury from './pages/Treasury'
-import { Books } from './pages/Books'
+import Books  from './pages/Books'
 import About from './pages/About'
 import Register from './pages/Register'
 import Content from './pages/Content'
@@ -16,12 +16,12 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/registers" element={<Registers />} />
-        <Route path="/book" element={<Books />} />
         <Route path="/readings" element={<Treasury />} />
         <Route path="/about" element={<About />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/content/:book_id" element={<Content />} />
+        <Route path="/content/:id" element={<Content />} />
         <Route path="/login" element={<Login/>} />
+        <Route path="/bookcategories/category/:category_id" element={<Books />} />
       </Routes>
     </BrowserRouter>
   )
