@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import BookService from "../Services/Book.service";
 import ReadingListService from "../Services/ReadingList.service";
 import Layout from "../components/Layout";
 import UserService from "../Services/User.service";
 import { jwtDecode } from "jwt-decode";
-
 
 const Content = () => {
   const { id } = useParams(); // ดึง book_id จาก URL
@@ -14,7 +13,13 @@ const Content = () => {
   const [topBooks, setTopBooks] = useState([]);
   const [currentIndex2, setCurrentIndex2] = useState(0);
   const [user, setUser] = useState(null);
+  const [reviews, setReviews] = useState([]); // 📌 เก็บรีวิว
+  const [newComment, setNewComment] = useState(""); // 📌 เก็บคอมเมนต์ที่พิมพ์
+  const [selectedRating, setSelectedRating] = useState(0); // เก็บค่าคะแนนที่เลือก
 
+  const handleRatingSelect = (rating) => {
+    setSelectedRating(rating); // อัปเดตค่าคะแนนที่เลือก
+  };
   // 📌 โหลดข้อมูลหนังสือจาก API
   useEffect(() => {
     const fetchBookData = async () => {
@@ -22,11 +27,11 @@ const Content = () => {
         console.log("📌 Fetching book data for ID:", id);
         const response = await BookService.getBookById(id);
         setBook(response.data);
+        setReviews(response.data.reviews); // ✅ ดึงรีวิวจาก API
       } catch (error) {
         console.error("❌ Error fetching book:", error);
       }
     };
-    
 
     const fetchTopBooks = async () => {
       try {
@@ -58,7 +63,6 @@ const Content = () => {
     }
   };
 
-
   // 📌 เพิ่มหนังสือไปยัง Reading List
   const handleAddToReadingList = async () => {
     try {
@@ -78,6 +82,66 @@ const Content = () => {
     }
   };
 
+  const handleAddReview = async (e) => {
+    e.preventDefault();
+  
+    if (!user || !user.user_id) {
+      alert("กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น");
+      return;
+    }
+  
+    if (!newComment.trim()) {
+      alert("กรุณาพิมพ์ข้อความก่อนส่งความคิดเห็น");
+      return;
+    }
+  
+    if (selectedRating === 0) {
+      alert("กรุณาให้คะแนนก่อนส่งความคิดเห็น");
+      return;
+    }
+  
+    try {
+      const response = await BookService.addReview(id, user.user_id, newComment, selectedRating);
+      console.log("Full Response from API:", response);
+  
+      if (response && response.data) {
+        const { review, book } = response.data;
+  
+        if (!review.user) {
+          review.user = {
+            user_id: user.user_id,
+            username: user.username,
+            email: user.email,
+            pictureUrl: user.pictureUrl,
+          };
+        }
+  
+        console.log("New Review:", review);
+  
+        setReviews((prevReviews) => [...prevReviews, review]);
+  
+        setBook((prevBook) => ({
+          ...prevBook,
+          review_count: book.review_count,
+          average_rating: book.average_rating,
+        }));
+      } else {
+        console.error("❌ Unexpected response format:", response);
+      }
+    } catch (error) {
+      console.error("❌ Error adding review:", error);
+      alert("เกิดข้อผิดพลาดในการส่งความคิดเห็น กรุณาลองใหม่");
+    } finally {
+      setNewComment("");
+      setSelectedRating(0);
+  
+      // รีเฟรชหน้าเว็บ
+      setTimeout(() => {
+        window.location.reload();
+      }, 0); // รอ 0.5 วินาทีก่อนรีเฟรช เพื่อให้ UI มีเวลาปรับก่อนโหลดใหม่ 
+    }
+  };
+  
   if (!book) return <p>Loading...</p>;
 
   return (
@@ -105,7 +169,9 @@ const Content = () => {
 
         {/* 🔥 หนังสือยอดนิยม */}
         <div className="relative overflow-hidden w-full px-4 mt-10">
-          <h1 className="text-3xl font-bold ml-5 mb-4">🔥 หนังสือยอดนิยม ตลอดกาล</h1>
+          <h1 className="text-3xl font-bold ml-5 mb-4">
+            🔥 หนังสือยอดนิยม ตลอดกาล
+          </h1>
           <div
             className="flex transition-transform duration-500"
             style={{ transform: `translateX(-${(currentIndex2 * 100) / 5}%)` }}
@@ -134,7 +200,9 @@ const Content = () => {
           {/* ปุ่มเลื่อนซ้าย-ขวา */}
           {currentIndex2 < 5 && (
             <button
-              onClick={() => setCurrentIndex2((prevIndex) => Math.max(prevIndex + 5, 0))}
+              onClick={() =>
+                setCurrentIndex2((prevIndex) => Math.max(prevIndex + 5, 0))
+              }
               className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full"
             >
               <ChevronRight size={44} />
@@ -142,12 +210,98 @@ const Content = () => {
           )}
           {currentIndex2 > 0 && (
             <button
-              onClick={() => setCurrentIndex2((prevIndex) => Math.max(prevIndex - 5, 0))}
+              onClick={() =>
+                setCurrentIndex2((prevIndex) => Math.max(prevIndex - 5, 0))
+              }
               className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full"
             >
               <ChevronLeft size={44} />
             </button>
           )}
+        </div>
+
+        {/* 🔥 ส่วนแสดงความคิดเห็น */}
+        <div className="w-full max-w-3xl bg-white p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl font-bold mb-4">ความคิดเห็น</h2>
+
+          {/* ฟอร์มเพิ่มความคิดเห็น */}
+          {user ? (
+            <div className="flex items-start space-x-4 mb-6">
+              <img
+                src={user.pictureUrl}
+                alt={user.username}
+                className="w-10 h-10 rounded-full"
+              />
+              <div className="flex-1">
+                <p className="font-bold">{user.username}</p> {/* ชื่อผู้งาน */}
+                <div className="flex items-center space-x-1 my-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      size={24}
+                      className={`cursor-pointer ${
+                        selectedRating >= star
+                          ? "text-yellow-500 "
+                          : "text-gray-400"
+                      }`}
+                      onClick={() => handleRatingSelect(star)}
+                    />
+                  ))}
+                  <span className="ml-2 text-lg font-semibold">
+                    {selectedRating}.0
+                  </span>
+                </div>
+                <textarea
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  rows="2"
+                  placeholder="แสดงความคิดเห็น..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                ></textarea>
+                <button
+                  onClick={handleAddReview}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg mt-2"
+                >
+                  ส่งความคิดเห็น
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500">
+              กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น
+            </p>
+          )}
+
+          {/* รายการความคิดเห็น */}
+          <div className="space-y-4">
+            {reviews.length > 0 ? (
+              reviews.map((review) => (
+                <div
+                  key={review.review_id}
+                  className="bg-gray-100 p-4 rounded-lg"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={review.user.pictureUrl}
+                        alt={review.user.username}
+                        className="w-10 h-10 rounded-full"
+                      />
+                      <div>
+                        <p className="font-bold">{review.user.username}</p>
+                        <p className="text-gray-500 text-sm">
+                          {new Date(review.review_date).toLocaleString("th-TH")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-2">{review.comment}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">ยังไม่มีความคิดเห็น</p>
+            )}
+          </div>
         </div>
       </div>
     </Layout>

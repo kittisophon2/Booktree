@@ -2,15 +2,39 @@ import http from "../http-common";
 import { jwtDecode } from "jwt-decode"; 
 
 // 📌 ดึงรายการหนังสือของผู้ใช้
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("No token found");
+
+  return { Authorization: `Bearer ${token}` };
+};
+
+// ใช้ในฟังก์ชันต่างๆ เช่น
 const getUserReadingList = async () => {
+  try {
     const token = localStorage.getItem("token");
-    if (!token) return null;
-  
+    if (!token) throw new Error("No token found");
+
     const decoded = jwtDecode(token);
-    const userId = decoded.id; 
-  
-    return http.get(`/readings/${userId}`);
-  };
+    const userId = decoded.userId;
+
+    if (!userId) {
+      console.error("❌ Invalid userId from token:", decoded);
+      throw new Error("Invalid user_id from token");
+    }
+
+    const response = await http.get(`/readings/${userId}`, {
+      headers: getAuthHeaders(),
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching user reading list:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
 
 // 📌 เพิ่มหนังสือลง Reading List
 const addToReadingList = async (book_id) => {
@@ -51,26 +75,64 @@ const addToReadingList = async (book_id) => {
 
 
 // 📌 อัปเดตสถานะการอ่าน (เริ่มอ่าน)
-const startReading = (id) => {
-    return http.patch(`/readings/${id}/start`);
-  };
-  
+const startReading = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found");
 
-// 📌 อัปเดตสถานะการอ่าน (อ่านจบแล้ว)
-const finishReading = (id) => {
-  return http.patch(`/readings/${id}/finish`);
+    const response = await http.patch(`/readings/${id}/start`, null, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error starting reading:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
-// 📌 ลบหนังสือออกจาก Reading List
-const removeFromReadingList = (book_id) => {
+const finishReading = async (id) => {
+  try {
     const token = localStorage.getItem("token");
-    if (!token) return Promise.reject("No token found");
-  
+    if (!token) throw new Error("No token found");
+
+    const response = await http.patch(`/readings/${id}/finish`, null, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error finishing reading:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+// 📌 ลบหนังสือออกจาก Reading List
+const removeFromReadingList = async (book_id) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found");
+
     const decoded = jwtDecode(token);
-    const user_id = decoded.id;
-  
-    return http.delete(`/readings/${user_id}/${book_id}`);
-  };
+    const user_id = decoded.userId; // ✅ เปลี่ยนเป็น userId ให้ตรงกัน
+
+    if (!user_id) {
+      console.error("❌ Invalid userId from token:", decoded);
+      throw new Error("Invalid user_id from token");
+    }
+
+    const response = await http.delete(`/readings/${user_id}/${book_id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error removing from reading list:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
   
   
 
