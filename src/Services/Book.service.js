@@ -8,6 +8,10 @@ const getTopBooks = () => {
   return http.get(`/books/top-books/top`);
 };
 
+const getavBooks = () => {
+  return http.get(`/books/top-books/toprating`);
+};
+
 const getBookById = (book_id) => {
   return http.get(`/books/${book_id}`);
 };
@@ -36,7 +40,8 @@ const BookService = {
   getBooks,
   getTopBooks,
   getBookById,
-  addReview, // ✅ เพิ่มเข้า object เพื่อให้เรียกใช้ได้
+  addReview,
+  getavBooks, 
 };
 
 export default BookService;

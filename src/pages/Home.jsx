@@ -5,11 +5,14 @@ import BookService from "../Services/Book.service";
 import BookCategoryService from "../Services/BookCategory.service";
 import Layout from "../components/Layout";
 import Slideshow from "../components/Slideshow";
+import ReviewService from "../Services/Review.service";
 
 const BookList = () => {
   const [books, setBooks] = useState([]);
   const [bookCategories, setBookCategories] = useState([]);
   const [topBooks, setTopBooks] = useState([]);
+  const [avBooks, setavBooks] = useState([]);
+  const [Review, setReview] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentIndex2, setCurrentIndex2] = useState(0);
 
@@ -27,7 +30,22 @@ const BookList = () => {
         setTopBooks(response.data);
       })
       .catch((e) => console.log(e));
+
+      BookService.getavBooks(10)
+      .then((response) => {
+        setavBooks(response.data);
+      })
+      .catch((e) => console.log(e));
+
+      ReviewService.getReview(10)
+      .then((response) => {
+        setReview(response.data);
+      })
+      .catch((e) => console.log(e));
+
   }, []);
+
+  
   
   useEffect(() => {
     if (books.length === 0) return;
@@ -224,62 +242,60 @@ const BookList = () => {
             </div>
           </div>
 
-          {/* นักอ่านที่อ่านเยอะที่สุด */}
+          {/* หนังสือยอดนิยม */}
           <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col min-h-[450px]">
             <h2 className="text-xl font-bold text-center mb-4 text-gray-700">
-              👨‍💻 นักอ่านที่อ่านเยอะที่สุด
+            👨‍💻 นักอ่านที่มีส่วนร่วมมากที่สุด
             </h2>
-            <div className=" flex-grow">
-              {[...Array(5)].map((_, index) => (
-                <div
-                  key={index}
-                  className="flex items-center space-x-4 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                >
-                  <span className="text-lg font-semibold text-gray-700">
-                    #{index + 1}
-                  </span>
-                  <img
-                    src="/pic/booktree2.png"
-                    className="w-20 h-20  rounded-full border"
-                    alt="user"
-                  />
-                  <div>
-                    <h3 className="text-md font-semibold text-gray-800">
-                      Username {index + 1}
-                    </h3>
-                    <p className="text-gray-600 text-sm">50+ หนังสือ</p>
+            <div className="space-y-4 flex-grow">
+              {Review.slice(0, 5).map((Review, index) => (
+                <Link to={``} key={Review.user_id}>
+                  <div className="flex items-center space-x-4 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                    <span className="text-lg font-semibold text-gray-700">
+                      #{index + 1}
+                    </span>
+                    <img
+                      src={Review.pictureUrl}
+                      alt={Review.username}
+                      className="w-14 h-20 object-cover rounded-md shadow-md"
+                    />
+                    <div>
+                      <h3 className="text-md font-semibold text-gray-800">
+                        {Review.username}
+                      </h3>
+                      <p className="text-gray-600 text-sm">แสดงความคิดเห็น {Review.review_count} ครั้ง</p>
+                    </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
 
-          {/* หนังสือที่ได้คะแนนมากที่สุด */}
-          <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col min-h-[450px]">
+         {/* หนังสือยอดนิยม */}
+         <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col min-h-[450px]">
             <h2 className="text-xl font-bold text-center mb-4 text-gray-700">
-              ⭐ หนังสือที่ได้คะแนนมากที่สุด
+            ⭐ หนังสือที่ได้คะแนนมากที่สุด
             </h2>
-            <div className=" flex-grow">
-              {[...Array(5)].map((_, index) => (
-                <div
-                  key={index}
-                  className="flex items-center space-x-4 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                >
-                  <span className="text-lg font-semibold text-gray-700">
-                    #{index + 1}
-                  </span>
-                  <img
-                    src="/pic/booktree2.png"
-                    className="w-20 h-20 rounded-full border"
-                    alt="user"
-                  />
-                  <div>
-                    <h3 className="text-md font-semibold text-gray-800">
-                      Reader {index + 1}
-                    </h3>
-                    <p className="text-gray-600 text-sm">10 เล่ม/เดือน</p>
+            <div className="space-y-4 flex-grow">
+              {avBooks.slice(0, 5).map((book, index) => (
+                <Link to={`/content/${book._id}`} key={book._id}>
+                  <div className="flex items-center space-x-4 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                    <span className="text-lg font-semibold text-gray-700">
+                      #{index + 1}
+                    </span>
+                    <img
+                      src={book.book_photo}
+                      alt={book.title}
+                      className="w-14 h-20 object-cover rounded-md shadow-md"
+                    />
+                    <div>
+                      <h3 className="text-md font-semibold text-gray-800">
+                        {book.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm">{book.author}</p>
+                    </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
