@@ -10,6 +10,7 @@ import Content from './pages/Content'
 import Login from './pages/Login'
 
 
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -22,6 +23,7 @@ const App = () => {
         <Route path="/content/:id" element={<Content />} />
         <Route path="/login" element={<Login/>} />
         <Route path="/bookcategories/category/:category_id" element={<Books />} />
+       
       </Routes>
     </BrowserRouter>
   )

@@ -16,6 +16,8 @@ const Content = () => {
   const [reviews, setReviews] = useState([]); // 📌 เก็บรีวิว
   const [newComment, setNewComment] = useState(""); // 📌 เก็บคอมเมนต์ที่พิมพ์
   const [selectedRating, setSelectedRating] = useState(0); // เก็บค่าคะแนนที่เลือก
+  const [showBookContent, setShowBookContent] = useState(false);
+  const [bookContent, setBookContent] = useState(""); // ✅ เก็บ HTML ของหนังสือ
 
   const handleRatingSelect = (rating) => {
     setSelectedRating(rating); // อัปเดตค่าคะแนนที่เลือก
@@ -45,7 +47,15 @@ const Content = () => {
     fetchBookData();
     fetchTopBooks();
   }, [id]);
-
+  
+  function EbookReader({ htmlUrl }) {
+    return (
+      <iframe
+        src={htmlUrl}
+        style={{ width: "100%", height: "600px", border: "none" }}
+      />
+    );
+  }
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -84,29 +94,34 @@ const Content = () => {
 
   const handleAddReview = async (e) => {
     e.preventDefault();
-  
+
     if (!user || !user.user_id) {
       alert("กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น");
       return;
     }
-  
+
     if (!newComment.trim()) {
       alert("กรุณาพิมพ์ข้อความก่อนส่งความคิดเห็น");
       return;
     }
-  
+
     if (selectedRating === 0) {
       alert("กรุณาให้คะแนนก่อนส่งความคิดเห็น");
       return;
     }
-  
+
     try {
-      const response = await BookService.addReview(id, user.user_id, newComment, selectedRating);
+      const response = await BookService.addReview(
+        id,
+        user.user_id,
+        newComment,
+        selectedRating
+      );
       console.log("Full Response from API:", response);
-  
+
       if (response && response.data) {
         const { review, book } = response.data;
-  
+
         if (!review.user) {
           review.user = {
             user_id: user.user_id,
@@ -115,11 +130,11 @@ const Content = () => {
             pictureUrl: user.pictureUrl,
           };
         }
-  
+
         console.log("New Review:", review);
-  
+
         setReviews((prevReviews) => [...prevReviews, review]);
-  
+
         setBook((prevBook) => ({
           ...prevBook,
           review_count: book.review_count,
@@ -134,14 +149,22 @@ const Content = () => {
     } finally {
       setNewComment("");
       setSelectedRating(0);
-  
+
       // รีเฟรชหน้าเว็บ
       setTimeout(() => {
         window.location.reload();
-      }, 0); // รอ 0.5 วินาทีก่อนรีเฟรช เพื่อให้ UI มีเวลาปรับก่อนโหลดใหม่ 
+      }, 0); // รอ 0.5 วินาทีก่อนรีเฟรช เพื่อให้ UI มีเวลาปรับก่อนโหลดใหม่
     }
   };
-  
+
+  const handleReadBook = async () => {
+    setShowBookContent((prev) => !prev);
+
+    if (!bookContent) {
+      await fetchBookContent(); // โหลดเนื้อหาหนังสือถ้ายังไม่มี
+    }
+  };
+
   if (!book) return <p>Loading...</p>;
 
   return (
@@ -158,12 +181,36 @@ const Content = () => {
             <h1 className="text-2xl font-bold mb-2">{book.title}</h1>
             <p className="text-lg font-semibold mb-1">โดย {book.author}</p>
             <p className="text-gray-700 mb-4">{book.description}</p>
-            <button
-              onClick={handleAddToReadingList}
-              className="bg-blue-600 text-white text-lg px-10 py-2 rounded-lg w-full md:w-auto"
-            >
-              คลังหนังสือ
-            </button>
+
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-4 mt-4">
+              <button
+                onClick={handleAddToReadingList}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-6 py-2 rounded-lg shadow-md transition-all w-full md:w-auto"
+              >
+                เพิ่มลงคลังหนังสือ
+              </button>
+
+              {book.html_content && (
+                <a
+                  href={book.html_content}
+                  target="_blank"
+                  type="text/html"
+                  rel="noopener noreferrer"
+                  className="bg-green-600 hover:bg-green-700 text-white text-lg px-6 py-2 rounded-lg shadow-md transition-all w-full md:w-auto text-center"
+                >
+                  อ่านหนังสือ
+                </a>
+              )}
+            </div>
+
+            {/* ✅ แสดงเนื้อหาหนังสือถ้ากดปุ่ม */}
+            {showBookContent && bookContent && (
+              <div className="mt-5 p-6 bg-gray-100 rounded-lg shadow-lg w-full">
+                <h2 className="text-xl font-bold mb-4">{book.title}</h2>
+                <p className="text-gray-700 mb-4">{book.description}</p>
+                <div dangerouslySetInnerHTML={{ __html: bookContent }} />
+              </div>
+            )}
           </div>
         </div>
 
