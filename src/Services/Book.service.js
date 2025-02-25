@@ -17,24 +17,33 @@ const getBookById = (book_id) => {
 };
 
 
-const addReview = (book_id, user_id, comment, rating = 5) => {
-  const token = localStorage.getItem("token"); // ดึง token จาก localStorage
+const addReview = (book_id, user_id, rating = 5, comment) => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    console.error("No authentication token found!");
+    return Promise.reject(new Error("Unauthorized: No token provided"));
+  }
+
   return http
     .post(
       "/books/add-review",
-      { book_id, user_id, comment, rating },
+      { book_id, user_id, rating, comment },
       {
-        headers: { Authorization: `Bearer ${token}` }, // แก้ไข Syntax ตรงนี้
+        headers: { Authorization: `Bearer ${token}` },
       }
     )
     .then((response) => {
-      return response.data; // คืนค่าเฉพาะข้อมูลที่ต้องใช้
+      console.log("📌 API Raw Response:", response); // ✅ เพิ่ม log เพื่อตรวจสอบโครงสร้าง response
+      return response.data; // ✅ ส่งเฉพาะข้อมูล data
     })
     .catch((error) => {
       console.error("Error submitting review:", error);
-      throw error; // โยน error ออกไปเพื่อให้ handle ภายนอกได้
+      throw error;
     });
 };
+
+
 
 const BookService = {
   getBooks,
