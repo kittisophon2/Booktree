@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react"; // 🗑️ นำเข้าไอคอนถังขยะ
 import Layout from "../components/Layout";
 import ReadingListService from "../Services/ReadingList.service";
 import { Link } from "react-router-dom";
-import { Trash2 } from "lucide-react";
-import { jwtDecode } from "jwt-decode";
-
 
 const Treasury = () => {
   const [books, setBooks] = useState([]);
@@ -12,42 +10,29 @@ const Treasury = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const data = await ReadingListService.getUserReadingList();
+        setBooks(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchBooks();
   }, []);
 
-  const fetchBooks = async () => {
+  // ✅ ฟังก์ชันลบหนังสือจากคลัง
+  const handleRemove = async (book_id) => {
+    if (!window.confirm("คุณต้องการลบหนังสือเล่มนี้ออกจากคลังใช่ไหม?")) return;
+
     try {
-      const data = await ReadingListService.getUserReadingList();
-      setBooks(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 📌 ลบหนังสือออกจาก Reading List
-  const removeFromReadingList = async (book_id) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
-
-      const decoded = jwtDecode(token);
-      const user_id = decoded.userId;
-
-      if (!user_id) {
-        console.error("❌ Invalid userId from token:", decoded);
-        throw new Error("Invalid user_id from token");
-      }
-
-      await ReadingListService.delete(`/readings/${user_id}/${book_id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // อัปเดตรายการหนังสือโดยกรองหนังสือที่ถูกลบออก
-      setBooks((prevBooks) => prevBooks.filter((b) => b.book.book_id !== book_id));
+      await ReadingListService.removeFromReadingList(book_id);
+      setBooks((prevBooks) => prevBooks.filter((book) => book.book.book_id !== book_id));
     } catch (error) {
-      console.error("❌ Error removing from reading list:", error.response?.data || error.message);
+      alert("❌ ลบไม่สำเร็จ: " + error.message);
     }
   };
 
@@ -55,7 +40,7 @@ const Treasury = () => {
     <Layout>
       <div className="p-10 h-full justify-center items-center flex">
         <div className="p-10 bg-white rounded-2xl w-full max-w-2xl">
-          <h1 className="text-3xl font-semibold mb-4">คลังหนังสือ</h1>
+          <h1 className="text-3xl font-semibold mb-4">📚 คลังหนังสือ</h1>
           {loading ? (
             <p>กำลังโหลด...</p>
           ) : error ? (
@@ -66,8 +51,8 @@ const Treasury = () => {
             <ul className="space-y-4">
               {books.map((book) => (
                 <li key={book.book.book_id} className="relative">
-                  <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col md:flex-row max-w-4xl w-full">
-                    <Link to={`/content/${book.book.book_id}`} className="flex-1 flex">
+                  <Link to={`/content/${book.book.book_id}`}>
+                    <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col md:flex-row max-w-4xl w-full">
                       <img
                         src={book.book.book_photo}
                         alt={book.book.title}
@@ -78,15 +63,15 @@ const Treasury = () => {
                         <p className="text-lg font-semibold mb-1">โดย {book.book.author}</p>
                         <p className="text-gray-700 mb-4">{book.book.description}</p>
                       </div>
-                    </Link>
-                    {/* ปุ่มลบ */}
-                    <button
-                      onClick={() => removeFromReadingList(book.book.book_id)}
-                      className="absolute bottom-4 right-4 bg-red-500 text-white p-2 rounded-full shadow-md hover:bg-red-600 transition"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  </div>
+                    </div>
+                  </Link>
+                  {/* ✅ ปุ่มลบ: วงกลม + ไอคอนถังขยะ */}
+                  <button
+                    className="absolute bottom-3 right-3 bg-red-500 text-white rounded-full p-2 shadow-lg hover:bg-red-700 transition-transform transform hover:scale-110"
+                    onClick={() => handleRemove(book.book.book_id)}
+                  >
+                    <Trash2 size={20} />
+                  </button>
                 </li>
               ))}
             </ul>
