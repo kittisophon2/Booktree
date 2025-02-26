@@ -38,38 +38,50 @@ const getUserReadingList = async () => {
 
 // 📌 เพิ่มหนังสือลง Reading List
 const addToReadingList = async (book_id) => {
-    try {
+  try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.error("❌ No token found in localStorage");
-        throw new Error("No token found");
+          console.error("❌ No token found in localStorage");
+          throw new Error("No token found");
       }
-  
+
       const decoded = jwtDecode(token);
-      const user_id = decoded.userId; // ✅ เปลี่ยนจาก id เป็น userId
-  
-      // ✅ ตรวจสอบว่า user_id มีค่าหรือไม่
+      const user_id = decoded.userId;
+
       if (!user_id) {
-        console.error("❌ Decoded token does not contain a valid user_id:", decoded);
-        throw new Error("Invalid user_id from token");
+          console.error("❌ Decoded token does not contain a valid user_id:", decoded);
+          throw new Error("Invalid user_id from token");
       }
-  
+
       console.log("📌 Sending request with:", { user_id, book_id });
-  
+
+      // ✅ เพิ่มหนังสือลงในคลัง
       const response = await http.post(
-        "/readings",
-        { user_id, book_id, status: "TO_READ" },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          "/readings",
+          { user_id, book_id, status: "TO_READ" },
+          { headers: { Authorization: `Bearer ${token}` } }
       );
-  
+
+      // ✅ ตรวจสอบว่าเพิ่มสำเร็จแล้วค่อยเพิ่มตัวนับ
+      if (response.data) {
+          console.log("📌 Book added successfully, now incrementing count...");
+
+          await http.put(
+              `/books/increment-added-to-list/${book_id}`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          console.log("✅ Successfully incremented book add count");
+      }
+
       return response.data;
-    } catch (error) {
+  } catch (error) {
       console.error("❌ Error adding to reading list:", error.response?.data || error.message);
       throw error;
-    }
-  };
+  }
+};
+
   
   
 
