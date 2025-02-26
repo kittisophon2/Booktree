@@ -47,15 +47,7 @@ const Content = () => {
     fetchBookData();
     fetchTopBooks();
   }, [id]);
-  
-  function EbookReader({ htmlUrl }) {
-    return (
-      <iframe
-        src={htmlUrl}
-        style={{ width: "100%", height: "600px", border: "none" }}
-      />
-    );
-  }
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -92,32 +84,37 @@ const Content = () => {
     }
   };
 
-  const handleAddReview = async (e) => { 
+  const handleAddReview = async (e) => {
     e.preventDefault();
-  
+
     if (!user || !user.user_id) {
       alert("กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น");
       return;
     }
-  
+
     if (!newComment.trim()) {
       alert("กรุณาพิมพ์ข้อความก่อนส่งความคิดเห็น");
       return;
     }
-  
+
     if (selectedRating === 0) {
       alert("กรุณาให้คะแนนก่อนส่งความคิดเห็น");
       return;
     }
-  
+
     try {
-      const response = await BookService.addReview(id, user.user_id, selectedRating, newComment);
-  
+      const response = await BookService.addReview(
+        id,
+        user.user_id,
+        selectedRating,
+        newComment
+      );
+
       console.log("📌 Full Response from API:", response);
-  
+
       if (response && response.review && response.book) {
         const { review, book } = response;
-  
+
         // ✅ เช็กให้แน่ใจว่า review มีข้อมูล user
         if (!review.user) {
           review.user = {
@@ -127,18 +124,17 @@ const Content = () => {
             picture: user.pictureUrl,
           };
         }
-  
+
         console.log("✅ New Review Added:", review);
-  
+
         // ✅ อัปเดต state ของ reviews และ book ทันที
         setReviews((prevReviews) => [...prevReviews, review]);
-  
+
         setBook((prevBook) => ({
           ...prevBook,
           review_count: book.review_count,
           average_rating: book.average_rating,
         }));
-  
       } else {
         console.error("❌ Unexpected response format:", response);
       }
@@ -150,9 +146,6 @@ const Content = () => {
       setSelectedRating(0);
     }
   };
-  
-  
-  
 
   const handleReadBook = async () => {
     setShowBookContent((prev) => !prev);
@@ -191,7 +184,6 @@ const Content = () => {
                 <a
                   href={book.html_content}
                   target="_blank"
-                  type="text/html"
                   rel="noopener noreferrer"
                   className="bg-green-600 hover:bg-green-700 text-white text-lg px-6 py-2 rounded-lg shadow-md transition-all w-full md:w-auto text-center"
                 >
