@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ ใช้ useNavigate
 import { User, Lock, Mail, Image as ImageIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import UserService from "../Services/User.service";
 
 const Register = () => {
+  const navigate = useNavigate(); // ✅ ใช้ hook สำหรับเปลี่ยนหน้า
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -32,7 +34,10 @@ const Register = () => {
 
     try {
       await UserService.postUser(form);
-      setMessage("🎉 สมัครสมาชิกสำเร็จ!");
+      setMessage("🎉 สมัครสมาชิกสำเร็จ! กำลังไปยังหน้าเข้าสู่ระบบ...");
+      
+      // ✅ Redirect ไปที่หน้า /login หลังจากสมัครสมาชิกสำเร็จ (รอ 2 วินาที)
+      setTimeout(() => navigate("/login"), 2000);
     } catch (error) {
       setMessage(`❌ เกิดข้อผิดพลาด: ${error.response.data.error}`);
     }
