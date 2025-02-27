@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react"; // 🗑️ นำเข้าไอคอนถังขยะ
+import { Trash2, CheckCircle } from "lucide-react"; // เพิ่มไอคอน CheckCircle ✅
 import Layout from "../components/Layout";
 import ReadingListService from "../Services/ReadingList.service";
 import { Link } from "react-router-dom";
@@ -24,15 +24,30 @@ const Treasury = () => {
     fetchBooks();
   }, []);
 
-  // ✅ ฟังก์ชันลบหนังสือจากคลัง
-  const handleRemove = async (book_id) => {
+  const handleRemove = async (reading_id) => {
     if (!window.confirm("คุณต้องการลบหนังสือเล่มนี้ออกจากคลังใช่ไหม?")) return;
 
     try {
-      await ReadingListService.removeFromReadingList(book_id);
-      setBooks((prevBooks) => prevBooks.filter((book) => book.book.book_id !== book_id));
+      await ReadingListService.removeFromReadingList(reading_id);
+      setBooks((prevBooks) => prevBooks.filter((book) => book.reading_id !== reading_id));
     } catch (error) {
       alert("❌ ลบไม่สำเร็จ: " + error.message);
+    }
+  };
+
+  // ✅ ฟังก์ชันกด "อ่านแล้ว"
+  const handleFinishReading = async (reading_id) => {
+    if (!window.confirm("คุณอ่านหนังสือเล่มนี้จบแล้วใช่ไหม?")) return;
+
+    try {
+      await ReadingListService.finishReading(reading_id);
+      setBooks((prevBooks) =>
+        prevBooks.map((book) =>
+          book.reading_id === reading_id ? { ...book, status: "อ่านแล้ว ✅" } : book
+        )
+      );
+    } catch (error) {
+      alert("❌ ไม่สามารถอัปเดตสถานะได้: " + error.message);
     }
   };
 
@@ -50,7 +65,7 @@ const Treasury = () => {
           ) : (
             <ul className="space-y-4">
               {books.map((book) => (
-                <li key={book.book.book_id} className="relative">
+                <li key={book.reading_id} className="relative">
                   <Link to={`/content/${book.book.book_id}`}>
                     <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col md:flex-row max-w-4xl w-full">
                       <img
@@ -62,13 +77,25 @@ const Treasury = () => {
                         <h1 className="text-2xl font-bold mb-2">{book.book.title}</h1>
                         <p className="text-lg font-semibold mb-1">โดย {book.book.author}</p>
                         <p className="text-gray-700 mb-4">{book.book.description}</p>
+                        <p className={`mb-4 font-semibold ${book.status === "อ่านแล้ว ✅" ? "text-green-600" : "text-gray-600"}`}>
+                          สถานะ: {book.status}
+                        </p>
                       </div>
                     </div>
                   </Link>
-                  {/* ✅ ปุ่มลบ: วงกลม + ไอคอนถังขยะ */}
+                  {/* ✅ ปุ่มอ่านแล้ว */}
+                  {book.status !== "อ่านแล้ว ✅" && (
+                    <button
+                      className="absolute bottom-14 right-3 bg-green-500 text-white rounded-full p-2 shadow-lg hover:bg-green-700 transition-transform transform hover:scale-110"
+                      onClick={() => handleFinishReading(book.reading_id)}
+                    >
+                      <CheckCircle size={20} />
+                    </button>
+                  )}
+                  {/* 🗑️ ปุ่มลบ */}
                   <button
                     className="absolute bottom-3 right-3 bg-red-500 text-white rounded-full p-2 shadow-lg hover:bg-red-700 transition-transform transform hover:scale-110"
-                    onClick={() => handleRemove(book.book.book_id)}
+                    onClick={() => handleRemove(book.reading_id)}
                   >
                     <Trash2 size={20} />
                   </button>

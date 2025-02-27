@@ -23,7 +23,7 @@ const BookList = () => {
         setBooks(response.data);
       })
       .catch((e) => console.log(e));
-  
+
     // โหลดหนังสือยอดนิยม
     BookService.getTopBooks(10)
       .then((response) => {
@@ -31,54 +31,50 @@ const BookList = () => {
       })
       .catch((e) => console.log(e));
 
-      BookService.getavBooks(10)
+    BookService.getavBooks(10)
       .then((response) => {
         setavBooks(response.data);
       })
       .catch((e) => console.log(e));
 
-      ReviewService.getReview(10)
+    ReviewService.getReview(10)
       .then((response) => {
         setReview(response.data);
       })
       .catch((e) => console.log(e));
-
   }, []);
 
-  
-  
   useEffect(() => {
     if (books.length === 0) return;
-  
+
     const categoryRequests = books.map((book) =>
       BookCategoryService.getCategoriesByBookId(book._id)
     );
-  
+
     Promise.all(categoryRequests)
       .then((categoryResponses) => {
         const categories = categoryResponses.map((res, index) => ({
           book_id: books[index]._id,
-          category: res.data.categories.length > 0 ? res.data.categories : ["ไม่ระบุหมวดหมู่"],
+          category:
+            res.data.categories.length > 0
+              ? res.data.categories
+              : ["ไม่ระบุหมวดหมู่"],
         }));
         setBookCategories(categories);
       })
       .catch((e) => console.log("Error loading categories:", e));
   }, [books]);
-  
-    
+
   const getCategoryName = (bookId) => {
     const bookCategory = bookCategories.find((bc) => bc.book_id === bookId);
-    
+
     if (!bookCategory || !bookCategory.category) return "ไม่ระบุหมวดหมู่";
-  
+
     // ถ้า category เป็น array ให้แสดงผลเป็นข้อความ เช่น "Fantasy, Adventure"
     return Array.isArray(bookCategory.category)
       ? bookCategory.category.join(", ")
       : bookCategory.category;
   };
-  
-  
- 
 
   const prevSlide = () => {
     setCurrentIndex((prevIndex) => Math.max(prevIndex - 5, 0));
@@ -188,13 +184,13 @@ const BookList = () => {
             ))}
           </div>
           {currentIndex2 < 5 && ( // ปุ่มหายไปเมื่อถึงหน้าที่สอง (index 5)
-  <button
-    onClick={nextSlide2}
-    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full"
-  >
-    <ChevronRight size={44} />
-  </button>
-)}
+            <button
+              onClick={nextSlide2}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full"
+            >
+              <ChevronRight size={44} />
+            </button>
+          )}
           {currentIndex2 > 0 && (
             <button
               onClick={prevSlide2}
@@ -245,7 +241,7 @@ const BookList = () => {
           {/* หนังสือยอดนิยม */}
           <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col min-h-[450px]">
             <h2 className="text-xl font-bold text-center mb-4 text-gray-700">
-            👨‍💻 นักอ่านที่มีส่วนร่วมมากที่สุด
+              👨‍💻 นักอ่านที่มีส่วนร่วมมากที่สุด
             </h2>
             <div className="space-y-4 flex-grow">
               {Review.slice(0, 5).map((Review, index) => (
@@ -263,7 +259,9 @@ const BookList = () => {
                       <h3 className="text-md font-semibold text-gray-800">
                         {Review.username}
                       </h3>
-                      <p className="text-gray-600 text-sm">แสดงความคิดเห็น {Review.review_count} ครั้ง</p>
+                      <p className="text-gray-600 text-sm">
+                        แสดงความคิดเห็น {Review.review_count} ครั้ง
+                      </p>
                     </div>
                   </div>
                 </Link>
@@ -271,10 +269,10 @@ const BookList = () => {
             </div>
           </div>
 
-         {/* หนังสือยอดนิยม */}
-         <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col min-h-[450px]">
+          {/* หนังสือยอดนิยม */}
+          <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col min-h-[450px]">
             <h2 className="text-xl font-bold text-center mb-4 text-gray-700">
-            ⭐ หนังสือที่ได้คะแนนมากที่สุด
+              ⭐ หนังสือที่ได้คะแนนมากที่สุด
             </h2>
             <div className="space-y-4 flex-grow">
               {avBooks.slice(0, 5).map((book, index) => (
@@ -293,13 +291,21 @@ const BookList = () => {
                         {book.title}
                       </h3>
                       <p className="text-gray-600 text-sm">{book.author}</p>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-yellow-500">⭐</span>
+                        <p className="text-gray-600 text-sm font-semibold">
+                          {book.averageRating}
+                        </p>
+                        <span className="text-gray-400 text-sm">
+                          ({book.totalReviews} รีวิว)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
-
         </div>
       </div>
     </Layout>

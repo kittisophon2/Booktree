@@ -6,7 +6,7 @@ import ReadingListService from "../Services/ReadingList.service";
 import Layout from "../components/Layout";
 import UserService from "../Services/User.service";
 import { jwtDecode } from "jwt-decode";
-
+import http from "../http-common";
 const Content = () => {
   const { id } = useParams(); // ดึง book_id จาก URL
   const [book, setBook] = useState(null);
@@ -47,7 +47,7 @@ const Content = () => {
     fetchBookData();
     fetchTopBooks();
   }, [id]);
-
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -83,7 +83,55 @@ const Content = () => {
       alert("❌ ไม่สามารถเพิ่มลงคลังหนังสือได้!");
     }
   };
-
+  const handleStartReading = async (book_id) => {
+    console.log("📌 Start reading for book:", id);
+    try {
+      
+  
+      const readingListId = await getReadingListId(id);
+      if (!readingListId) {
+        throw new Error("Reading list entry not found");
+      }
+  
+      await ReadingListService.startReading(readingListId);
+      console.log("✅ เริ่มอ่านหนังสือเรียบร้อย!");
+    } catch (error) {
+    }
+  };
+  const getReadingListId = async (book_id) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
+  
+      const decoded = jwtDecode(token);
+      const user_id = decoded.userId;
+  
+      if (!user_id || !book_id) {
+        throw new Error("Invalid user_id or book_id");
+      }
+  
+      console.log("User ID:", user_id); 
+      console.log("Book ID:", book_id);
+  
+      // แก้ไขการส่งข้อมูลผ่าน query parameters แทน `body`
+      const response = await http.get(`/readings/find/by-user-and-book`, {
+        params: { user_id, book_id }, // ใช้ params แทน body
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      console.log("Response from Back-end:", response.data);
+  
+      if (!response.data || !response.data.reading_id) {
+        throw new Error("Reading list entry not found");
+      }
+  
+      return response.data.reading_id;
+    } catch (error) {
+      console.error("❌ Error fetching reading list ID:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+  
   const handleAddReview = async (e) => {
     e.preventDefault();
 
@@ -146,15 +194,6 @@ const Content = () => {
       setSelectedRating(0);
     }
   };
-
-  const handleReadBook = async () => {
-    setShowBookContent((prev) => !prev);
-
-    if (!bookContent) {
-      await fetchBookContent(); // โหลดเนื้อหาหนังสือถ้ายังไม่มี
-    }
-  };
-
   if (!book) return <p>Loading...</p>;
 
   return (
@@ -182,24 +221,16 @@ const Content = () => {
 
               {book.html_content && (
                 <a
-                  href={book.html_content}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-green-600 hover:bg-green-700 text-white text-lg px-6 py-2 rounded-lg shadow-md transition-all w-full md:w-auto text-center"
-                >
-                  อ่านหนังสือ
-                </a>
+                href={book.html_content}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>handleStartReading(id)}
+                className="bg-green-600 hover:bg-green-700 text-white text-lg px-6 py-2 rounded-lg shadow-md transition-all w-full md:w-auto text-center"
+              >
+                อ่านหนังสือ
+              </a>
               )}
             </div>
-
-            {/* ✅ แสดงเนื้อหาหนังสือถ้ากดปุ่ม */}
-            {showBookContent && bookContent && (
-              <div className="mt-5 p-6 bg-gray-100 rounded-lg shadow-lg w-full">
-                <h2 className="text-xl font-bold mb-4">{book.title}</h2>
-                <p className="text-gray-700 mb-4">{book.description}</p>
-                <div dangerouslySetInnerHTML={{ __html: bookContent }} />
-              </div>
-            )}
           </div>
         </div>
 
